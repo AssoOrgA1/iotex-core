@@ -197,6 +197,7 @@ func (l *LogFilter) SelectBlocksFromRangeBloomFilter(bf bloom.BloomFilter, start
 			for _, addr := range l.pbFilter.Address {
 				if bf.Exist(append(Heightkey, []byte(addr)...)) {
 					flag = true
+					break
 				}
 			}
 			if !flag {
@@ -205,6 +206,7 @@ func (l *LogFilter) SelectBlocksFromRangeBloomFilter(bf bloom.BloomFilter, start
 		}
 		if len(l.pbFilter.Topics) > 0 {
 			flag := false
+		checkTopic:
 			for _, e := range l.pbFilter.Topics {
 				if e == nil || len(e.Topic) == 0 {
 					continue
@@ -212,18 +214,17 @@ func (l *LogFilter) SelectBlocksFromRangeBloomFilter(bf bloom.BloomFilter, start
 				for _, v := range e.Topic {
 					if bf.Exist(append(Heightkey, v...)) {
 						flag = true
-						break
+						break checkTopic
 					}
-				}
-				if flag {
-					break
 				}
 			}
 			if !flag {
 				continue
 			}
 		}
-		blkNums = append(blkNums, blockHeight)
+		if blockHeight >= start && blockHeight <= end {
+			blkNums = append(blkNums, blockHeight)
+		}
 	}
 	return blkNums
 }
